@@ -1,6 +1,5 @@
 ---
 title: "Ejeericio de exploración de datos"
-author: "Cristian Campos A"
 date: "`r Sys.Date()`"
 output: pdf_document
 ---
