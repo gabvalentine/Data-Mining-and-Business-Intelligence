@@ -1,0 +1,144 @@
+---
+title: "Ejeericio de exploración de datos"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exploración de datos
+
+## Lectura del archivo csv
+
+
+```{r }
+datos<-read.csv('MusicSales.csv', header=TRUE, sep=',')
+
+names(datos)
+str(datos) #structure
+summary(datos)
+head(datos, n=10)
+tail(datos, n=5 )
+```
+
+## Exploración de datos
+
+Determinar si existen valores atípicos en alguna de las variables numéricas.
+
+```{r}
+  # ver los nombres de las columnas
+  colnames(datos)
+  #El número de filas en el dataframe
+  nrow(datos)
+```
+
+```{r }
+datos$InvoiceDate <- as.Date(datos$InvoiceDate)
+str(datos)
+summary(datos)
+```
+
+La columna de "InvoiceDate" inicialmente el tipo de dato que reconoció fue de tipo character, por lo que se cambió y se clasificó como Date
+
+## Histograma
+
+```{r }
+hist(x = datos$Sales, 
+     main = "Histograma sobre las ventas",
+     xlab = "Ventas",
+     ylab = "Frecuencia")
+```
+
+
+```{r }
+hist(x = datos$Quantity, 
+     main = "Histograma sobre las cantidades vendidas",
+     xlab = "Cantidades",
+     ylab = "Frecuencia")
+```
+
+
+## Gráfico de barras
+
+
+```{r }
+barplot(prop.table(table(datos$Region)),
+        main = "Frecuencia relativas de las ventas en las Regiones",
+        xlab = "Regiones",
+        ylab = "Frecuencia")
+```
+
+## Agrupaciones
+
+Se calcula para cada artista el promedio de las ventas y el promedio de las ganancias
+
+```{r }
+tapply(datos$Quantity, datos$Artist, mean)
+tapply(datos$Sales, datos$Artist, sum)
+```
+
+## Valores NA
+
+```{r }
+datos<-read.csv('MusicSales.csv', header=TRUE, sep=',', na.strings=c(""," "))
+datos
+
+is.na(datos)
+sum(is.na(datos))
+
+na <- is.na(datos)
+
+
+apply(X = is.na(datos), MARGIN = 1, FUN = sum) #Filas
+na[1:15, 1:7]
+
+apply(X = is.na(datos), MARGIN = 2, FUN = sum) #Columnas
+
+#install.packages('heatmaply')
+heatmaply::heatmaply_na(datos)
+
+
+```
+
+## Promedio de ventas
+
+Obtiene los promedios de ventas por país y para cada país por género musical.
+
+```{r }
+
+tapply(datos$Sales, list(datos$Country, datos$Genre), mean)
+```
+
+## Limpieza de datos
+
+Con la función na.omit remueva del dataframe aquellas filas con valores NA. Almacene el resultado en un nuevo dataframe.
+
+```{r }
+
+newData <- na.omit(datos)
+newData
+```
+
+## Ordenamiento
+
+```{r }
+
+newData <- newData[order(-newData$Sales),]
+newData
+```
+
+## Top 10
+Muestra los 10 artistas con más ventas (ordenado descendentemente por el monto de las ventas).
+```{r }
+
+newData2 <- aggregate( x = newData$Sales,
+           by = list(newData$Artist),
+           FUN = sum)
+newData2 <- newData2[order(-newData2$x),]
+newCols <- c("Artist", "Total Sales")
+colnames(newData2) <- newCols
+head(newData2, n = 10)
+
+```
