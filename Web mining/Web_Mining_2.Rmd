@@ -1,0 +1,129 @@
+---
+title: "Web Mining 2"
+author: "Cristian Campos A"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r }
+ library(stringr)
+ library(rvest)
+```
+
+```{r }
+library(ggplot2)
+```
+
+# Obtención de la página web
+```{r }
+# se leen los datos de la página de interés usando read_html
+ 
+  dirPag<-'https://en.wikipedia.org/wiki/List_of_highest-grossing_media_franchises'
+  
+  pag<- read_html(dirPag,encoding = 'UTF-8')  
+```
+
+## Obtención partes de la página
+```{r }
+  tablasPag<- html_table(pag,fill=TRUE)
+  
+  length(tablasPag)
+```
+## Selección de estructura con los datos de interés
+```{r }
+# obtener la tabla de interés, en este caso es la #3
+   
+  datosFranq<- tablasPag[[1]]
+   
+  head(datosFranq)
+```
+
+## Selección de datos de interés
+```{r }
+  # Elegir las columnas de interés:  Franchise, Year of inception, Total Revenue
+  # y Revenue breakdown.  La tabla ya está ordenada por Total Revenue por lo que
+  # se descarta la columna Number
+   
+   
+   datosFranq<-datosFranq[,1:4]
+  
+   colnames(datosFranq)<-c('Franchise','YearOfInception','Revenue','RBreakdown')
+  
+   head(datosFranq)
+```
+
+# Proceso de limpieza de los datos
+```{r }
+   # se sustituyen '' por NA
+   
+   datosFranq$Franchise<- ifelse(datosFranq$Franchise=='',NA, datosFranq$Franchise)
+   
+   # las filas que contienen 'billon' se excluyen
+
+   filas<-which(str_detect(datosFranq$Franchise,'\\s+billion*'))
+   
+   datosFranq<-datosFranq[filas*-1,]
+  
+   # se elimnan filas con NA's
+   datosFranq<-na.omit(datosFranq)
+```   
+
+
+## Limpieza de la variable Revenue
+```{r }
+#  Se elimina el símbolo $ y el texto est. y billions del campo Revenue
+   revenue<- str_remove(datosFranq$Revenue,'est\\.')
+   revenue<- str_remove(revenue,'\\s*\\$')
+   
+    # se elimina palabras como billion, [] y su contenido
+   revenue<- str_remove(revenue,'\\s+billion(\\+?)(\\[\\w+\\])*')
+   
+   # se eliminan }}
+   
+   revenue<-str_remove(revenue,'\\s*\\}\\}')
+   
+   # se convierte a numérico la variable
+   
+   revenue<-round(as.numeric(revenue),digits = 2)
+```
+
+## Limpieza de la variable Revenue Breakdown
+```{r }
+# Se elimnan $ \n espacios [] y su contenido, las palabras million y billion
+   
+   breakdown<-str_remove_all(datosFranq$RBreakdown,'\\n')
+   
+   breakdown<- str_remove_all(breakdown,'\\s*\\$\\d+((\\.|,)\\d+)?\\s*billion(\\[\\w+\\])*')
+   breakdown<- str_remove_all(breakdown,'\\s*\\$\\d+((\\.|,)\\d+)?\\s*million(\\[\\w+\\])*')
+   
+   breakdown<-str_remove_all(breakdown,"[[:punct:]]")
+```
+
+## Limpieza de la variable Year
+```{r }
+#Se elimina [] y su contenido
+   
+    year<- str_remove_all(datosFranq$YearOfInception,'(\\[\\w+\\])*')
+   
+   # Se convierte a numérico el año
+   
+   year<- as.numeric(year)
+```
+
+# Construcción del dataframe final
+```{r }
+   datosFinal<- data.frame(datosFranq$Franchise,year,revenue,breakdown)
+   colnames(datosFinal)<-c('Franchise','YearInception','Revenue','RevenueSources')
+```
+
+# Gráfico de las Top 15 Franquicias según Revenue
+```{r }
+# gráfico de barras ordenado descendentemente por Revenue
+   
+     ggplot(head(datosFinal,15),aes(x=reorder(Franchise,Revenue),y=Revenue))+
+     geom_bar(stat = 'identity')  + coord_flip()+
+     geom_text(mapping=aes(y=Revenue,label=Revenue),color='white') +
+     labs(title = 'Top 15 Franchises by revenue',subtitle = 'in $ billions',
+          x='Franchise')+
+     theme(plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust = 0.5)) 
+```
