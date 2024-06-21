@@ -1,0 +1,105 @@
+---
+title: "ExpresionesRegulares"
+author: "Cristian Campos A"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Uso de StringR
+
+[Fuente: Industria medica lidero las exportaciones en el pais en el 2018](https://www.crhoy.com/economia/industria-medica-lidero-las-exportaciones-en-el-pais-en-el-2018/)
+
+```{r }
+# carga de bibliotecas
+
+library(stringr)
+```
+
+## Carga de variable
+
+```{r cars}
+texto<-"En total, el país exportó 11494 millones de dólares en el 2018. De esto, más de 1000 millones eran algún tipo de dispositivo médico (agujas, jeringas, catéteres, cánulas o similares), 621 millones de prótesis médicas y 833 millones aparatos médicos y 925 millones piñas frescas."
+```
+
+## Extracción inicial rubros y cifras de exportación
+
+```{r }
+# extraer las cifras de exportación y los rubros
+totalesRubros<- str_extract_all(texto,'\\d+\\smillones\\s+([[:alpha:]]+\\s*)+')
+totalesRubros
+```
+
+```{r }
+# se descarta el primer elemento de la lista
+
+largo<-length(totalesRubros[[1]])
+totalesRubros<- totalesRubros[[1]][2:largo]
+totalesRubros
+
+```
+
+## Separación de rubros y cantidades
+
+```{r }
+# se dividen los strings para obtener las cantidades y los rubros
+ totalesRubros<-str_split(totalesRubros,"millones")
+ totalesRubros
+```
+
+```{r }
+ # se extraen por separado los montos y los rubros
+ montos<-c()
+ rubros<-c()
+ 
+ for(i in 1:length(totalesRubros))
+ {
+     montos<-c(montos,totalesRubros[[i]][1])
+     rubros<-c(rubros,totalesRubros[[i]][2])
+ }
+ 
+ # contenido del vector montos
+ montos
+```
+
+```{r }
+ # contenido del vector rubros
+ rubros
+```
+
+## Procesamiento final de los montos de exportación
+
+```{r }
+ # se convierte a numérico los montos, se limpia el texto de los rubros
+ 
+ montos<-as.numeric(montos)
+```
+
+## Extracción y limpieza de los rubros
+
+```{r }
+ rubros<-str_remove(rubros,'\\s+([[:alpha:]]+\\s+)*(de?)\\s')
+ rubros<-str_remove(rubros,'\\s+y\\s+')
+ 
+ df<-data.frame(rubros,montos)
+ df
+```
+
+```{r }
+
+```
+
+```{r }
+
+```
+
+```{r }
+
+```
+
+```{r }
+
+```
+
+```{r }
+
+```
